@@ -62,8 +62,6 @@ svg{display:block}
 .brand p{margin:3px 0 0;color:var(--ink-soft);font-size:14px}
 .top-right{display:flex;align-items:center;gap:16px}
 .scene{width:300px;height:92px;flex:none}
-.acct{display:flex;flex-direction:column;align-items:flex-end;gap:4px;color:var(--ink-soft);font-size:12.5px;font-weight:600}
-.acct[hidden]{display:none}
 
 /* ---------- 큰 틀 ---------- */
 .shell{display:grid;grid-template-columns:158px minmax(0,1fr) 300px;gap:18px;padding:10px 24px 32px;align-items:start;max-width:1560px;margin:0 auto}
@@ -418,9 +416,6 @@ table.dct a:hover{text-decoration:underline}
   </a>
   <div class="top-right">
     <svg class="scene" id="sceneTop" viewBox="0 0 300 92" aria-hidden="true"></svg>
-    <div class="acct" id="acct" hidden>
-      <button type="button" class="btn sm" id="logout">로그아웃</button>
-    </div>
   </div>
 </header>
 
@@ -597,7 +592,8 @@ function categorize(title, hasWho){
   if(/일직|숙직|당직/.test(title)) return '당직';
   if(/교육|연수|워크숍/.test(title)) return '교육';
   if(/인사이동|인사발령|정기인사|전보|발령/.test(title)) return '인사';
-  if(/출장/.test(title) || hasWho) return '출장';
+  // 밖으로 나가는 일이 분명한 제목은, 출장자 칸을 안 써도(개인 일정으로 등록해도) 출장으로 봐요.
+  if(/출장|현장|준공검사|참고인|송달/.test(title) || hasWho) return '출장';
   return '기타';
 }
 function timeLabel(cat, when){
@@ -1532,9 +1528,8 @@ function doDelete(id, btn){
 
 /* ================== 로그인 · 불러오기 ================== */
 var pollTimer=null;
-function showAcct(){ $('#acct').hidden=!(Store.mode==='online' && Store.session()); }
 function showLogin(msg){
-  $('#login').hidden=false; $('#acct').hidden=true;
+  $('#login').hidden=false;
   $('#lgErr').textContent=msg||''; $('#lgBtn').disabled=false; $('#lgBtn').textContent='로그인';
   $('#lgEmail').value=TEAM_EMAIL;
   setTimeout(function(){ var f=$('#lgPw'); if(f) f.focus(); },30);
@@ -1546,7 +1541,7 @@ function forceLogin(msg){
   showLogin(msg);
 }
 function boot(){
-  $('#login').hidden=true; showAcct();
+  $('#login').hidden=true;
   $('#view').innerHTML='<div class="empty" style="padding:60px 8px">일정을 불러오는 중이에요…</div>';
   return Store.load().then(function(rows){
     setEvents(rows); state.booted=true; pickInitial();
@@ -1661,7 +1656,6 @@ $('#hitNext').addEventListener('click',function(){ stepHit(1); });
 $('#hitPrev').addEventListener('click',function(){ stepHit(-1); });
 $('#addBtn').addEventListener('click',function(){ openEditor(''); });
 $('#home').addEventListener('click',goHome);
-$('#logout').addEventListener('click',function(){ forceLogin('로그아웃했어요.'); });
 overlay.addEventListener('click',function(ev){
   var t=ev.target;
   if(t===overlay||t.hasAttribute('data-close')){ closeDialog(); return; }
